@@ -1,5 +1,7 @@
 Fairbnb: AI-Powered Real Estate Valuation Engine
 
+🔗 View Live App: https://fairbnb-ai.streamlit.app/
+
 📌 The Problem:
 
 The New York City short-term rental market is highly volatile and densely saturated. Property hosts frequently rely on intuition rather than data to price their listings, leading to either massive revenue loss (underpricing) or stagnant vacancies (overpricing).
