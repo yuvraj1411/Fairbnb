@@ -19,7 +19,7 @@ model, scaler = load_models()
 st.set_page_config(
     page_title="Fairbnb", 
     layout="wide",
-    initial_sidebar_state="expanded" 
+    initial_sidebar_state="collapsed" 
 )
 
 # CSS Styling
