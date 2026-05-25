@@ -40,6 +40,6 @@ To run this application locally on your machine -
 
 🔮 Future Scope:
 
-Live Market Integration - Transitioning from static historical CSV data to a live API pipeline to capture seasonal pricing shifts.\
+Live Market Integration - Transitioning from static historical CSV data to a live API pipeline to capture seasonal pricing shifts.
 
 Computer Vision Integration - Adding an image upload feature allowing a CNN to grade interior design quality to replace the manual text-based Luxury Index.
