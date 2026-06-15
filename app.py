@@ -1,28 +1,16 @@
 import streamlit as st
-import joblib
-import pandas as pd
-import os
+import requests
+import folium
+from streamlit_folium import st_folium
 
-# Model Loading
-@st.cache_resource
-def load_models():
-    model_path = os.path.join('models', 'model.pkl')
-    scaler_path = os.path.join('models', 'scaler.pkl')
-    
-    model = joblib.load(model_path)
-    scaler = joblib.load(scaler_path)
-    return model, scaler
-
-model, scaler = load_models()
-
-# Page Configuration
+# 1. Page Configuration
 st.set_page_config(
     page_title="Fairbnb", 
     layout="wide",
     initial_sidebar_state="collapsed" 
 )
 
-# CSS Styling
+# 2. CSS Styling
 st.markdown("""
     <style>
     .stApp {
@@ -118,148 +106,109 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Sidebar Navigation
+# 3. Sidebar Navigation
 with st.sidebar:
     st.title("Menu")
     st.markdown("---")
     page = st.radio("Navigation", ["Valuation Engine", "How It Works", "Limitations"], label_visibility="collapsed")
     st.markdown("---")
 
-# Main Pages
+# 4. Main Pages
 if page == "Valuation Engine":
     st.title("FAIRBNB")
     st.subheader("AI-Powered Real Estate Valuation Engine")
     st.markdown("Hosting an Airbnb in New York City? Input the details below and get a fair, data-driven estimate for your property's optimal rental rate.")
     st.markdown("---")
     
-    st.markdown("### Property Specifications")
+    # --- RESTRUCTURED 2-COLUMN LAYOUT ---
+    map_col, input_col = st.columns([1.2, 1], gap="large")
 
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("##### Location & Classification")
+    with map_col:
+        st.markdown("### 📍 Location")
+        st.markdown("Click exactly where your property is located on the map to lock in your GPS coordinates.")
         
-        # Cascading Dropdown Logic
-        neighborhood_map = {
-            "Manhattan": ["Chelsea", "Chinatown", "East Harlem", "East Village", "Financial District", "Gramercy", "Harlem", "Hell's Kitchen", "Kips Bay", "Lower East Side", "Midtown", "Murray Hill", "Theater District", "Upper East Side", "Upper West Side", "Washington Heights", "West Village", "Other"],
-            "Brooklyn": ["Bedford-Stuyvesant", "Bushwick", "Canarsie", "Clinton Hill", "Crown Heights", "Cypress Hills", "East Flatbush", "East New York", "Flatbush", "Greenpoint", "Park Slope", "Prospect-Lefferts Gardens", "Sunset Park", "Williamsburg", "Other"],
-            "Queens": ["Astoria", "East Elmhurst", "Elmhurst", "Flushing", "Jamaica", "Long Island City", "Ridgewood", "Sunnyside", "Woodside", "Other"],
-            "Bronx": ["Other"],
-            "Staten Island": ["Other"]
-        }
+        # Initialize map over NYC
+        m = folium.Map(location=[40.7128, -74.0060], zoom_start=11)
         
-        borough = st.selectbox("Borough", list(neighborhood_map.keys()))
-        specific_neighborhood = st.selectbox("Neighborhood", neighborhood_map[borough])
-        room_type = st.selectbox("Room Type", ["Entire home/apt", "Private room", "Shared room", "Hotel room"])
-    
-    with col2:
-        st.markdown("##### Architectural Capacity")
-        accommodates = st.slider("Accommodates (Guests)", min_value=1, max_value=16, value=2)
+        # Render map inside the column 
+        map_data = st_folium(m, height=550, use_container_width=True, returned_objects=["last_clicked"])
+        
+        # Default coordinates
+        lat, lon = 40.7128, -74.0060 
+        
+        if map_data and map_data.get("last_clicked"):
+            lat = map_data["last_clicked"]["lat"]
+            lon = map_data["last_clicked"]["lng"]
+            st.success(f"Coordinates Locked! Latitude: {lat:.5f}, Longitude: {lon:.5f}")
+        else:
+            st.info("Awaiting Map Pinpoint")
+
+    with input_col:
+        st.markdown("### Property Specifications")
+        
+        st.markdown("##### Core Setup")
+        room_type = st.selectbox("Room Type", ["Entire home/apt", "Private room", "Shared room"])
+        accommodates = st.slider("Accommodates (Guests)", min_value=1, max_value=15, value=2)
         bedrooms = st.slider("Bedrooms", min_value=1, max_value=10, value=1)
         beds = st.slider("Beds", min_value=1, max_value=15, value=1)
-        bathrooms = st.slider(
-            "Bathrooms", 
-            min_value=0.0, 
-            max_value=5.0, 
-            value=1.0, 
-            step=0.5, 
-            help="A 0.5 bathroom (half-bath) includes a toilet and a sink, but no shower or bathtub."
-        )
-        shared_bath = st.checkbox("Shared Bathroom Facility")
         
-    with col3:
-        st.markdown("##### Constraints")
+        st.markdown("<br>", unsafe_allow_html=True) 
+        
+        st.markdown("##### Facilities & Constraints")
+        bathrooms = st.slider("Bathrooms", min_value=0.0, max_value=5.0, value=1.0, step=0.5)
+        shared_bath = st.checkbox("Shared Bathroom Facility")
         min_nights = st.number_input("Minimum Nights Requirement", min_value=1, max_value=365, value=1, step=1)
         availability = st.number_input("Annual Availability (Days)", min_value=0, max_value=365, value=180, step=1)
-        
-    st.markdown("##### Property Details")
-    description = st.text_area("Give a brief description of your property", height=100)
 
     st.markdown("---")
     submitted = st.button("Generate Valuation")
 
     if submitted:
-        with st.spinner("Analyzing property parameters & calculating metrics..."):
+        with st.spinner("Pinging AI Server for Valuation..."):
             try:
-                # Calculating Luxury Score from description text
-                desc_lower = description.lower()
-                premium_words = [
-                    'luxury', 'penthouse', 'doorman', 'view', 'rooftop', 'elevator', 
-                    'balcony', 'terrace', 'spacious', 'renovated', 'designer',
-                    'exposed brick', 'high ceilings', 'loft', 'hardwood', 'floor-to-ceiling', 
-                    'skyline', 'panoramic', 'brownstone', 'pre-war', 'prewar', 'crown molding', 
-                    'skylight', 'working fireplace', 'wood burning', 'french doors',
-                    'marble', 'granite', 'quartz', 'stainless steel', "chef's", 
-                    'wine fridge', 'wine cooler', 'sub-zero', 'miele', 'viking', 
-                    'kitchen island', 'breakfast bar', 'walk-in pantry', 'custom cabinetry',
-                    'jacuzzi', 'soaking tub', 'rain shower', 'heated floors', 'radiant heat', 
-                    'steam shower', 'freestanding tub', 'clawfoot tub', 'double vanity', 'bidet',
-                    'in-unit', 'washer', 'dryer', 'ac', 'tv', 'central air', 'central ac', 
-                    'concierge', 'fitness center', 'gym', 'pool', 'roof deck', 
-                    'private garden', 'private backyard', 'valet', 'private parking',
-                    'espresso', 'nespresso', 'smart home', 'sonos', 'apple tv', 'peloton', 
-                    'fast wifi', 'gigabit', 'keyless', 'motorized shades', 'home theater', 
-                    'projector', 'walk-in closet', 'custom closet', 'duplex', 'triplex', 
-                    'bespoke', 'curated', 'artisanal', 'egyptian cotton', 'hotel-quality'
-                    ]
-                luxury_score = sum(1 for word in premium_words if word in desc_lower)
+                input_data = {
+                    "latitude": lat,
+                    "longitude": lon,
+                    "accommodates": accommodates,
+                    "bedrooms": bedrooms,
+                    "beds": beds,
+                    "minimum_nights": min_nights,
+                    "availability_365": availability,
+                    "room_type": room_type,
+                    "bathrooms": bathrooms,
+                    "is_shared_bath": shared_bath
+                }
+                
+                API_URL = "http://127.0.0.1:8000/predict"
+                response = requests.post(API_URL, json=input_data) 
+                if response.status_code == 200:
+                    prediction = response.json()
+                    predicted_price = prediction['Predicted Price']
 
-                # Creating a blank dictionary that perfectly matches the model's expected columns
-                expected_cols = model.feature_names_in_
-                input_dict = {col: [0] for col in expected_cols}
-                
-                # Fill in the numerical features
-                input_dict['accommodates'] = [accommodates]
-                input_dict['bedrooms'] = [bedrooms]
-                input_dict['beds'] = [beds]
-                input_dict['bathrooms'] = [bathrooms]
-                input_dict['minimum_nights'] = [min_nights]
-                input_dict['availability_365'] = [availability]
-                input_dict['is_shared_bath'] = [1 if shared_bath else 0]
-                input_dict['luxury_score'] = [luxury_score]
-                
-                # Turning on the correct categorical dummy columns
-                borough_col = f'neighbourhood_group_cleansed_{borough}'
-                if borough_col in expected_cols:
-                    input_dict[borough_col] = [1]
+                    error_margin = 29    
+                    lower_bound = max(30, predicted_price - error_margin) 
+                    upper_bound = predicted_price + error_margin
                     
-                neigh_col = f'neighborhood_specific_{specific_neighborhood}'
-                if neigh_col in expected_cols:
-                    input_dict[neigh_col] = [1]
-                    
-                room_col = f'room_type_{room_type}'
-                if room_col in expected_cols:
-                    input_dict[room_col] = [1]
+                    st.markdown(
+                            f"""
+    <div class="prediction-card">
+    <div style="font-size: 1.1rem; color: #ff4b4b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Target Nightly Rate</div>
+    <div class="price-text">${predicted_price:.0f} <span style="font-size: 1.5rem; color: #aaaaaa;">/ night</span></div>
+    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+    <div style="color: #eeeeee; font-size: 1.2rem;">Competitive Price Bracket: <b>${lower_bound:.0f} - ${upper_bound:.0f}</b></div>
+    </div>
+    </div>
+                            """, 
+                            unsafe_allow_html=True
+                        )
+                     
+                else: 
+                    st.error(f"❌ API Error: {response.status_code} - {response.text}")
                 
-                # Building DataFrame and Scale
-                input_df = pd.DataFrame(input_dict)
-                cols_to_scale = ['accommodates', 'bedrooms', 'beds', 'bathrooms', 'minimum_nights', 'availability_365', 'luxury_score']
-                input_df[cols_to_scale] = scaler.transform(input_df[cols_to_scale])
-                
-                # Predicting
-                prediction_array = model.predict(input_df)
-                predicted_price = float(prediction_array[0])
-                
-                error_margin = 31.76 
-                
-                lower_bound = max(30, predicted_price - error_margin) 
-                upper_bound = predicted_price + error_margin
-                
-                st.markdown(
-                    f"""
-<div class="prediction-card">
-<div style="font-size: 1.1rem; color: #ff4b4b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Target Nightly Rate</div>
-<div class="price-text">${predicted_price:.0f} <span style="font-size: 1.5rem; color: #aaaaaa;">/ night</span></div>
-<div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-<div style="color: #eeeeee; font-size: 1.2rem;">Competitive Price Bracket: <b>${lower_bound:.0f} - ${upper_bound:.0f}</b></div>
-</div>
-</div>
-                    """, 
-                    unsafe_allow_html=True
-                )
-                
+            except requests.exceptions.ConnectionError:
+                st.error("❌ Could not connect to the backend. Is your FastAPI terminal running `uvicorn api:app --reload`?")
             except Exception as e:
-                st.error(f"Error making prediction: {e}")
+                st.error(f"❌ Error making prediction: {e}")
 
 elif page == "How It Works":
     st.title("Demystifying the Algorithm")
@@ -289,10 +238,10 @@ elif page == "Limitations":
     with lim_col1:
         st.metric(
             label="Median Absolute Error (MAE)", 
-            value="±$31.76", 
+            value="±$29", 
             delta="Expected Variance", 
             delta_color="off",
-            help="On average, our baseline prediction sits within $31.76 of the actual market rate for standard units."
+            help="On average, our baseline prediction sits within $29 of the actual market rate for standard units."
         )
         st.info("**Pro Tip:** Use this AI estimate as your baseline, then adjust it up or down based on your property's unique charm.")
         
@@ -302,7 +251,7 @@ elif page == "Limitations":
         st.markdown(r"""
         * **The Heavy Lifting:** The NYC rental market is chaotic. Our algorithm successfully cuts through that noise to calculate the core value of your property based strictly on hard data (location, bedrooms, architectural capacity, and natural language processing).
 
-        * **The Human Factor (The \$31 Buffer):** Mathematics cannot see your interior design, maybe a stunning skyline view or your exceptional hospitality as a host. This \$31 median range acts as a "Competitive Pricing Buffer." 
+        * **The Human Factor (The \$29 Buffer):** Mathematics cannot see your interior design, maybe a stunning skyline view or your exceptional hospitality as a host. This \$31 median range acts as a "Competitive Pricing Buffer." 
 
         * **How to use this tool:** Treat this tight range as a data-driven foundation. Take our baseline, factor in the unique vibe of your space, and confidently set your final price.
         """)
