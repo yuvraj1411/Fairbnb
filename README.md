@@ -40,6 +40,6 @@ To run this application locally on your machine -
 
 🔮 Future Scope:
 
-Computer Vision Integration - Adding an image upload feature allowing a CNN to grade interior design quality to replace the manual text-based Luxury Index.
+Computer Vision Integration - Adding an image upload feature allowing a CNN to grade interior design quality.
 
 Production Cloud Deployment - Containerizing the microservices using Docker and deploying the FastAPI backend to a dedicated cloud provider (like Render or AWS) to completely decouple the heavy ML compute from the Streamlit frontend UI.
