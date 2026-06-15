@@ -12,7 +12,7 @@ Fairbnb is an end-to-end Machine Learning web application that predicts the opti
 
 🚀 Key Technical Achievements:
 
-Optimized Predictive Accuracy (MAE: $31.76) - Iteratively tuned a Random Forest Regressor (n_estimators=200, max_depth=30) to achieve a Median Absolute Error of just $31.76 and an $R^2$ of 0.66. In a highly chaotic, human-driven real estate dataset, this provides hosts with an incredibly tight and actionable pricing buffer.
+Optimized Predictive Accuracy (MAE: $29) - Iteratively tuned a Random Forest Regressor (n_estimators=200, max_depth=30) to achieve a Median Absolute Error of just $29 and an $R^2$ of 0.72. In a highly chaotic, human-driven real estate dataset, this provides hosts with an incredibly tight and actionable pricing buffer.
 
 Custom NLP Feature Engineering - Engineered a dynamic "Luxury Index" by building a specialized NLP scanner. The pipeline scans raw property descriptions against an 85-word premium dictionary (capturing NYC-specific architectural "gold dust" like 'exposed brick', 'doorman', and 'pre-war'), quantifying qualitative aesthetic value into actionable numerical data.
 
@@ -35,11 +35,13 @@ To run this application locally on your machine -
    pip install -r requirements.txt
 
 3. Boot up the Valuation Engine
+   
+   IN YOUR FIRST TERMINAL - uvicorn api:app --reload
 
-   streamlit run app.py
+   IN YOUR SECOND TERMINAL - streamlit run app.py
 
 🔮 Future Scope:
 
-Live Market Integration - Transitioning from static historical CSV data to a live API pipeline to capture seasonal pricing shifts.
-
 Computer Vision Integration - Adding an image upload feature allowing a CNN to grade interior design quality to replace the manual text-based Luxury Index.
+
+Production Cloud Deployment - Containerizing the microservices using Docker and deploying the FastAPI backend to a dedicated cloud provider (like Render or AWS) to completely decouple the heavy ML compute from the Streamlit frontend UI.
