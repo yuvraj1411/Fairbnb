@@ -14,11 +14,9 @@ Fairbnb is an end-to-end Machine Learning web application that predicts the opti
 
 Optimized Predictive Accuracy (MAE: $29) - Iteratively tuned a Random Forest Regressor (n_estimators=250, max_depth=28) to achieve a Median Absolute Error of just $29 and an $R^2$ of 0.72. In a highly chaotic, human-driven real estate dataset, this provides hosts with an incredibly tight and actionable pricing buffer.
 
-Custom NLP Feature Engineering - Engineered a dynamic "Luxury Index" by building a specialized NLP scanner. The pipeline scans raw property descriptions against an 85-word premium dictionary (capturing NYC-specific architectural "gold dust" like 'exposed brick', 'doorman', and 'pre-war'), quantifying qualitative aesthetic value into actionable numerical data.
+Outlier Guillotine & Data Cleaning - Sanitized heavily skewed historical pricing and property data using strict statistical bounds and engineered feature extraction. This rigorous preprocessing pipeline ensures the core model weights remain uncorrupted by extreme luxury anomalies or erroneous data entries.
 
-Geographic Feature Protection - Prevented macro/micro-geographical data mismatching by engineering cascading dropdowns in the Streamlit frontend. The UI strictly forces valid macro-borough to micro-neighborhood mapping, ensuring the model never hallucinates predictions on impossible coordinates.
-
-Outlier Guillotine & Data Cleaning - Sanitized heavily skewed historical pricing and bathroom data using RegEx extraction and strict statistical bounds, ensuring the model weights were not corrupted by luxury anomalies.
+Interactive Geospatial Intelligence - Engineered an interactive map coordinate extractor (`streamlit-folium`) to capture exact Latitude and Longitude of the property instead of relying on generic neighborhood labels.
 
 ⚙️ Local Installation & Usage:
 
